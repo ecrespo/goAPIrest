@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  goapirest_test:
+    container_name: goapirest_app_test
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    volumes:
+      - goapirest_test:/app/src/app/
+    depends_on:
+       - mysql_test
+    networks:
+      - goapirest_test
+
+   mysql_test:
+     image: mysql:5.7
+     container_name: goapirest_db_test_mysql
+     ports:
+       - 3333:3306
+     environment:
+       - MYSQL_DATABASE=${TEST_DB_NAME}
+       - MYSQL_USER=${TEST_DB_USER}
+       - MYSQL_PASSWORD=${TEST_DB_PASSWORD}
+       - MYSQL_ROOT_PASSWORD=${TEST_DB_PASSWORD}
+       - DATABASE_HOST=${TEST_DB_HOST}
+     volumes:
+       - database_mysql_test:/var/lib/mysql
+     networks:
+       - goapirest_test
+
+volumes:
+  goapirest_test:
+  database_mysql_test:
+
+networks:
+  goapirest_test:
+    driver: bridge
