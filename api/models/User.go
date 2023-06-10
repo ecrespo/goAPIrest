@@ -3,13 +3,13 @@ package models
 import (
 	"errors"
 	"github.com/badoux/checkmail"
+	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 	"html"
 	"log"
 	"strings"
 	"time"
-	"github.com/jinzhu/gorm"
-))
+)
 
 type User struct {
 	ID        uint32    `gorm:"primary_key;auto_increment" json:"id"`
@@ -44,7 +44,6 @@ func (u *User) Prepare() {
 	u.CreatedAt = time.Now()
 	u.UpdatedAt = time.Now()
 }
-
 
 func (u *User) Validate(action string) error {
 	switch strings.ToLower(action) {

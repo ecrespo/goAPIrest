@@ -1,7 +1,7 @@
 # Start from golang base image
 FROM golang:alpine as builder
 
-# ENV GO111MODULE=on
+ENV GO111MODULE=on
 
 # Add Maintainer info
 LABEL maintainer="Ernesto Crespo <ecrespo@gmail.com>"
@@ -23,6 +23,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
+
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
 # Start a new stage from scratch
