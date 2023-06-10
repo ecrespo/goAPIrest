@@ -30,6 +30,8 @@ services:
     #      - .:/saludvirtual
     depends_on:
       - database
+    ports:
+      - "8085:8085"
     environment:
       - 'DB_PORT=3306'
       - 'DB_HOST=database'
