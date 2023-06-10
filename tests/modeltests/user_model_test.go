@@ -4,9 +4,9 @@ import (
 	"log"
 	"testing"
 
-	_ "github.com/jinzhu/gorm/dialects/mysql"    //mysql driver
-	_ "github.com/jinzhu/gorm/dialects/postgres" //postgres driver
-	"github.com/victorsteven/fullstack/api/models"
+	_ "github.com/jinzhu/gorm/dialects/mysql" //mysql driver
+	//_ "github.com/jinzhu/gorm/dialects/postgres" //postgres driver
+	"github.com/ecrespo/goAPIrest/api/models"
 	"gopkg.in/go-playground/assert.v1"
 )
 
