@@ -13,7 +13,7 @@ services:
     networks:
       - goapirest_test
 
-   mysql_test:
+  mysql_test:
      image: mysql:5.7
      container_name: goapirest_db_test_mysql
      ports:
