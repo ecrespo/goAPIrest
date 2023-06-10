@@ -1,73 +1,57 @@
-version: '3.9
-'
-
+version: '3'
 services:
-  traefik: #prueba
-    image: traefik:v2.10.1
-    command: --api.insecure=true --providers.docker
-    depends_on:
-      - web
-    networks:
-      - traefik-net
+  app:
+    container_name: goapirest_app
+    build: .
     ports:
-      - "80:80"
-      - "8080:8080"
+      - 8080:8080
+    restart: on-failure
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-
-
-  web:
-    build:
-      context: .
-      dockerfile: ./docker/app.dockerfile
-    networks:
-      - traefik-net
-    labels:
-      - "traefik.http.routers.web.rule=Host(`saludvirtual.local.ve`) || PathPrefix(`/`)"
-      - "traefik.http.services.web.loadbalancer.server.port=8080"
-    container_name: saludvirtual-web
-    #    volumes:
-    #      - .:/saludvirtual
+      - api:/usr/src/app/
     depends_on:
-      - database
-    ports:
-      - "8085:8085"
-    environment:
-      - 'DB_PORT=3306'
-      - 'DB_HOST=database'
+      - goapirest-mysql
+    networks:
+      - goapirest
 
-  database:
-    build:
-      context: .
-      dockerfile: ./docker/db.dockerfile
-    environment:
-      MYSQL_ROOT_PASSWORD: t00r
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: 4dm1n
-      MYSQL_DATABASE: saludvirtual
-    container_name: saludvirtual-db
+
+  goapirest-mysql:
+    image: mysql:5.7
+    container_name: goapirest_db_mysql
     ports:
-      - 33066:3306
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_HOST=${DB_HOST}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
     volumes:
-      - saludvirtual_data:/var/lib/mysql
+      - database_mysql:/var/lib/mysql
+    networks:
+      - goapirest
 
-  pma:
+  phpmyadmin:
     image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_container
     depends_on:
-      - database
-    ports:
-      - 5003:80
-    depends_on:
-      - database
+      - goapirest-mysql
     environment:
-      - 'PMA_HOST=database'
-      - 'PMA_PORT=3306'
-    container_name: saludvirtual-pma
+      - PMA_HOST=goapirest-mysql # Note the "goapirest-mysql". Must be the name of the what you used as the mysql service.
+      - PMA_USER=${DB_USER}
+      - PMA_PORT=${DB_PORT}
+      - PMA_PASSWORD=${DB_PASSWORD}
+    ports:
+      - 9090:80
+    restart: always
+    networks:
+      - goapirest
 
-
-networks:
-  traefik-net:
-    external: true
 
 volumes:
-  saludvirtual_data:
+  api:
+  database_mysql:
+
+# Networks to be created to facilitate communication between containers
+networks:
+  goapirest:
+    driver: bridge
