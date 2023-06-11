@@ -37,6 +37,12 @@ docker-compose ps
 
 6. Url de Bienvenida:
 
-[http://goapirest.local.ve/](http://goapirest.local.ve/)
+[http://goapirest.local.ve:8080/](http://goapirest.local.ve:8080/)
 
 7. Pruebas del Endpoint
+Revisar el artículo [Golang CRUD](https://levelup.gitconnected.com/crud-restful-api-with-go-gorm-jwt-postgres-mysql-and-testing-460a85ab7121)
+
+
+TODO:
+1. Ajustar variables de entorno según sea local, producción, develop, testing.
+2. Arreglar las variables para que despliegue pruebas unitarias.
