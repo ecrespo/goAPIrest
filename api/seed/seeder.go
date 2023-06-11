@@ -2,8 +2,8 @@ package seed
 
 import (
 	"github.com/ecrespo/goAPIrest/api/models"
+	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"github.com/jinzhu/gorm"
-	"log"
 )
 
 var users = []models.User{
@@ -31,31 +31,36 @@ var posts = []models.Post{
 }
 
 func Load(db *gorm.DB) {
-
+	logger := logs.GetLogger()
 	err := db.Debug().DropTableIfExists(&models.Post{}, &models.User{}).Error
 	if err != nil {
-		log.Fatalf("cannot drop table: %v", err)
+		//log.Fatalf("cannot drop table: %v", err)
+		logger.Fatal().Msgf("cannot drop table: %v", err)
 	}
 	err = db.Debug().AutoMigrate(&models.User{}, &models.Post{}).Error
 	if err != nil {
-		log.Fatalf("cannot migrate table: %v", err)
+		//log.Fatalf("cannot migrate table: %v", err)
+		logger.Fatal().Msgf("cannot migrate table: %v", err)
 	}
 
 	err = db.Debug().Model(&models.Post{}).AddForeignKey("author_id", "users(id)", "cascade", "cascade").Error
 	if err != nil {
-		log.Fatalf("attaching foreign key error: %v", err)
+		//log.Fatalf("attaching foreign key error: %v", err)
+		logger.Fatal().Msgf("attaching foreign key error: %v", err)
 	}
 
 	for i, _ := range users {
 		err = db.Debug().Model(&models.User{}).Create(&users[i]).Error
 		if err != nil {
-			log.Fatalf("cannot seed users table: %v", err)
+			//log.Fatalf("cannot seed users table: %v", err)
+			logger.Fatal().Msgf("cannot seed users table: %v", err)
 		}
 		posts[i].AuthorID = users[i].ID
 
 		err = db.Debug().Model(&models.Post{}).Create(&posts[i]).Error
 		if err != nil {
-			log.Fatalf("cannot seed posts table: %v", err)
+			//log.Fatalf("cannot seed posts table: %v", err)
+			logger.Fatal().Msgf("cannot seed posts table: %v", err)
 		}
 	}
 }

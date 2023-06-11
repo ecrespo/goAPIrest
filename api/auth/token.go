@@ -3,7 +3,7 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
-	"log"
+	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"net/http"
 	"os"
 	"strconv"
@@ -24,6 +24,7 @@ func CreateToken(user_id uint32) (string, error) {
 }
 
 func TokenValid(r *http.Request) error {
+
 	tokenString := ExtractToken(r)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -79,8 +80,10 @@ func ExtractTokenID(r *http.Request) (uint32, error) {
 // Pretty display the claims licely in the terminal
 func Pretty(data interface{}) {
 	b, err := json.MarshalIndent(data, "", " ")
+	logger := logs.GetLogger()
 	if err != nil {
-		log.Println(err)
+		logger.Error().Msgf("Error: %s", err)
+		//log.Println(err)
 		return
 	}
 
