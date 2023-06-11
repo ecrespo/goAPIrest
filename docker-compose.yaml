@@ -15,7 +15,7 @@ services:
 
 
   goapirest-mysql:
-    image: mysql:5.7
+    image: mysql:8.0.33
     container_name: goapirest_db_mysql
     ports:
       - 3306:3306
