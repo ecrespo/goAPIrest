@@ -1,43 +1,42 @@
-# Start from golang base image
-FROM golang:alpine as builder
+# Partimos de la imagen base de golang
+FROM golang:1.20.5-bullseye as builder
 
 ENV GO111MODULE=on
 
-# Add Maintainer info
+# Agregamos información del mantenedor
 LABEL maintainer="Ernesto Crespo <ecrespo@gmail.com>"
 
-# Install git.
-# Git is required for fetching the dependencies.
-RUN apk update && apk add --no-cache git
+# Instalamos git.
+# Git es necesario para obtener las dependencias.
+RUN apt-get update && apt-get install -y --no-install-recommends git
 
-# Set the current working directory inside the container
+# Establecemos el directorio de trabajo actual dentro del contenedor
 WORKDIR /app
 
-# Copy go mod and sum files
+# Copiamos los archivos go.mod y go.sum
 COPY go.mod go.sum ./
 
-# Download all dependencies. Dependencies will be cached if the go.mod and the go.sum files are not changed
+# Descargamos todas las dependencias. Las dependencias se almacenarán en caché si no se modifican los archivos go.mod y go.sum
 RUN go mod download
 
-# Copy the source from the current directory to the working Directory inside the container
+# Copiamos el código fuente desde el directorio actual al directorio de trabajo dentro del contenedor
 COPY . .
 
-# Build the Go app
-
+# Compilamos la aplicación de Go
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main .
 
-# Start a new stage from scratch
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
+# Iniciamos una nueva etapa desde cero
+FROM debian:bullseye-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 
 WORKDIR /root/
 
-# Copy the Pre-built binary file from the previous stage. Observe we also copied the .env file
+# Copiamos el archivo binario precompilado de la etapa anterior. Observa que también copiamos el archivo .env
 COPY --from=builder /app/main .
 COPY --from=builder /app/.env .
 
-# Expose port 8080 to the outside world
+# Exponemos el puerto 8080 hacia el exterior
 EXPOSE 8080
 
-#Command to run the executable
+# Comando para ejecutar el archivo binario
 CMD ["./main"]
