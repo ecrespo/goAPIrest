@@ -28,19 +28,40 @@ Instalar:
 
 2. Construir las images docker.
 docker-compose build
+Ó
+make build
 
-4. Levantar los contenedores.
+3. Levantar los contenedores.
 docker-compose up
 
-5. Listar tareas.
+4. Listar tareas.
 docker-compose ps
 
-6. Url de Bienvenida:
+make ps 
+5. Ver logs
+docker-compose logs -f
+o 
+make logs
+
+6. Pruebas unitarias
+docker-compose -f docker-compose.test.yaml up --build --abort-on-container-exit
+
+o
+make unitest
+
+7. Limpiar contenedores
+docker system prune -a
+o 
+make purge
+
+
+8. Url de Bienvenida:
 
 [http://goapirest.local.ve:8080/](http://goapirest.local.ve:8080/)
 
 7. Pruebas del Endpoint
 Revisar el artículo [Golang CRUD](https://levelup.gitconnected.com/crud-restful-api-with-go-gorm-jwt-postgres-mysql-and-testing-460a85ab7121)
+8. Pruebas unitarias usando docker
 
 
 TODO:
