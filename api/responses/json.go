@@ -2,15 +2,17 @@ package responses
 
 import (
 	"encoding/json"
-	"fmt"
+	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"net/http"
 )
 
 func JSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.WriteHeader(statusCode)
 	err := json.NewEncoder(w).Encode(data)
+	logger := logs.GetLogger()
 	if err != nil {
-		fmt.Fprintf(w, "%s", err.Error())
+		//fmt.Fprintf(w, "%s", err.Error())
+		logger.Error().Msg(err.Error())
 	}
 }
 

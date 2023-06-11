@@ -12,7 +12,7 @@ Se basa en los siguientes artículos:
 7. [Sending html email in golang](https://medium.com/hackernoon/sending-html-email-using-go-c464d03a26a6)
 8. [Golang stripe](https://medium.com/@ksandeeptech07/creating-and-managing-charges-with-stripe-in-golang-87b4c1deb250)
 9. [Docker golang mysql](https://articles.wesionary.team/dockerize-a-golang-applications-with-mysql-and-phpmyadmin-hot-reloading-included-86eb7a6cf8d5)
-10. 
+10. [zerolog](https://github.com/rs/zerolog)
 
 ## Pre-requisitos:
 
@@ -35,14 +35,8 @@ docker-compose up
 5. Listar tareas.
 docker-compose ps
 
-6. Url de acceso:
-http://saludvirtual.local.ve/countries
-Métodos
-* GET
-* POST:
-JSON
+6. Url de Bienvenida:
 
-{
-"Country": "España",
-"Language": "Spanish"
-}
+[http://goapirest.local.ve/](http://goapirest.local.ve/)
+
+7. Pruebas del Endpoint
