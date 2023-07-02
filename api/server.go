@@ -1,3 +1,4 @@
+// File: server.go
 package api
 
 import (
@@ -5,30 +6,58 @@ import (
 	"github.com/ecrespo/goAPIrest/api/seed"
 	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"github.com/joho/godotenv"
-	//"log"
 	"os"
-	//"log"
 )
 
+// Instance of the server
 var server = controllers.Server{}
 
 func Run() {
-
-	var err error
-	err = godotenv.Load()
-	logger := logs.GetLogger()
-	if err != nil {
-		logger.Fatal().Msgf("Error getting env, not comming through %v", err)
-
-	} else {
-		logger.Info().Msg("We are getting the env values")
-
+	if err := loadEnvVariables(); err != nil {
+		logs.GetLogger().Fatal().Msgf("Failed to load environment variables: %v", err)
+		return
 	}
-	logger.Info().Msgf("DB_DRIVER: %s", os.Getenv("DB_DRIVER"))
-	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 
+	initializeServer()
+	startApplication()
+}
+
+func loadEnvVariables() error {
+	if err := godotenv.Load(); err != nil {
+		return err
+	}
+
+	logs.GetLogger().Info().Msg("Environment variables loaded successfully")
+	return nil
+}
+
+func initializeServer() {
+	dbEnv := getDBEnvironmentVariables()
+	server.Initialize(dbEnv.driver, dbEnv.user, dbEnv.password, dbEnv.port, dbEnv.host, dbEnv.name)
 	seed.Load(server.DB)
-	logger.Info().Msg("About to start the application...")
-	server.Run(":8080")
+}
 
+func startApplication() {
+	logs.GetLogger().Info().Msg("Starting the application...")
+	server.Run(":8080")
+}
+
+type dbEnvironment struct {
+	driver   string
+	user     string
+	password string
+	port     string
+	host     string
+	name     string
+}
+
+func getDBEnvironmentVariables() dbEnvironment {
+	return dbEnvironment{
+		driver:   os.Getenv("DB_DRIVER"),
+		user:     os.Getenv("DB_USER"),
+		password: os.Getenv("DB_PASSWORD"),
+		port:     os.Getenv("DB_PORT"),
+		host:     os.Getenv("DB_HOST"),
+		name:     os.Getenv("DB_NAME"),
+	}
 }

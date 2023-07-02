@@ -5,21 +5,19 @@ import (
 	"strings"
 )
 
+var errMapping = map[string]string{
+	"nickname":       "Nickname Already Taken",
+	"email":          "Email Already Taken",
+	"title":          "Title Already Taken",
+	"hashedPassword": "Incorrect Password",
+}
+
 func FormatError(err string) error {
-
-	if strings.Contains(err, "nickname") {
-		return errors.New("Nickname Already Taken")
+	for key, val := range errMapping {
+		if strings.Contains(err, key) {
+			return errors.New(val)
+		}
 	}
 
-	if strings.Contains(err, "email") {
-		return errors.New("Email Already Taken")
-	}
-
-	if strings.Contains(err, "title") {
-		return errors.New("Title Already Taken")
-	}
-	if strings.Contains(err, "hashedPassword") {
-		return errors.New("Incorrect Password")
-	}
 	return errors.New("Incorrect Details")
 }
