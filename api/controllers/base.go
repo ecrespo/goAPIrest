@@ -1,16 +1,14 @@
 package controllers
 
 import (
-	"fmt"
+	"github.com/ecrespo/goAPIrest/api/database"
+	"github.com/ecrespo/goAPIrest/api/models"
 	"github.com/ecrespo/goAPIrest/api/utils/logs"
-	"log"
-	"net/http"
-
 	"github.com/gorilla/mux"
 	"github.com/jinzhu/gorm"
-
-	"github.com/ecrespo/goAPIrest/api/models"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
+	"log"
+	"net/http"
 )
 
 type Server struct {
@@ -18,37 +16,10 @@ type Server struct {
 	Router *mux.Router
 }
 
-type Database struct {
-	Driver, User, Password, Port, Host, Name string
-}
-
-func (db *Database) Initialize() (*gorm.DB, error) {
-	var connectionStr string
-	logger := logs.GetLogger()
-
-	switch db.Driver {
-	case "mysql":
-		connectionStr = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", db.User, db.Password, db.Host, db.Port, db.Name)
-	case "postgres":
-		connectionStr = fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", db.Host, db.Port, db.User, db.Name, db.Password)
-	default:
-		return nil, fmt.Errorf("Unsupported driver: %s", db.Driver)
-	}
-
-	conn, err := gorm.Open(db.Driver, connectionStr)
-	if err != nil {
-		logger.Info().Msgf("Cannot connect to %s database", db.Driver)
-		logger.Fatal().Msgf("This is the error:", err)
-	}
-	logger.Info().Msgf("We are connected to the %s database", db.Driver)
-
-	return conn, err
-}
-
 func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
 
 	var err error
-	db := &Database{
+	db := &database.Database{ // Aquí se cambió la estructura de Database
 		Driver:   Dbdriver,
 		User:     DbUser,
 		Password: DbPassword,

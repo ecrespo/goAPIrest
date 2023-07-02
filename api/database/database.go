@@ -2,39 +2,33 @@ package database
 
 import (
 	"fmt"
-	"github.com/ecrespo/goAPIrest/api/models"
 	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"github.com/jinzhu/gorm"
 )
 
-func NewDatabase(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) (*gorm.DB, error) {
-	var DB *gorm.DB
-	var err error
+type Database struct {
+	Driver, User, Password, Port, Host, Name string
+}
+
+func (db *Database) Initialize() (*gorm.DB, error) {
+	var connectionStr string
 	logger := logs.GetLogger()
 
-	if Dbdriver == "mysql" {
-		DBURL := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", DbUser, DbPassword, DbHost, DbPort, DbName)
-		DB, err = gorm.Open(Dbdriver, DBURL)
-		if err != nil {
-			logger.Info().Msgf("Cannot connect to %s database", Dbdriver)
-			logger.Fatal().Msgf("This is the error:", err)
-		} else {
-			logger.Info().Msgf("We are connected to the %s database", Dbdriver)
-		}
+	switch db.Driver {
+	case "mysql":
+		connectionStr = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", db.User, db.Password, db.Host, db.Port, db.Name)
+	case "postgres":
+		connectionStr = fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", db.Host, db.Port, db.User, db.Name, db.Password)
+	default:
+		return nil, fmt.Errorf("Unsupported driver: %s", db.Driver)
 	}
 
-	if Dbdriver == "postgres" {
-		DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
-		DB, err = gorm.Open(Dbdriver, DBURL)
-		if err != nil {
-			logger.Info().Msgf("Cannot connect to %s database", Dbdriver)
-			logger.Fatal().Msgf("This is the error:", err)
-		} else {
-			logger.Info().Msgf("We are connected to the %s database", Dbdriver)
-		}
+	conn, err := gorm.Open(db.Driver, connectionStr)
+	if err != nil {
+		logger.Info().Msgf("Cannot connect to %s database", db.Driver)
+		logger.Fatal().Msgf("This is the error:", err)
 	}
+	logger.Info().Msgf("We are connected to the %s database", db.Driver)
 
-	DB.Debug().AutoMigrate(&models.User{}, &models.Post{}) //database migration
-
-	return DB, nil
+	return conn, err
 }
