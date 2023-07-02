@@ -1,12 +1,16 @@
 package controllers
 
 import (
-	"github.com/ecrespo/goAPIrest/api/database"
+	"fmt"
 	"github.com/ecrespo/goAPIrest/api/utils/logs"
-	"github.com/gorilla/mux"
-	"github.com/jinzhu/gorm"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+
+	"github.com/ecrespo/goAPIrest/api/models"
+	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
 type Server struct {
@@ -14,14 +18,51 @@ type Server struct {
 	Router *mux.Router
 }
 
-func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
-	var err error
+type Database struct {
+	Driver, User, Password, Port, Host, Name string
+}
+
+func (db *Database) Initialize() (*gorm.DB, error) {
+	var connectionStr string
 	logger := logs.GetLogger()
 
-	server.DB, err = database.NewDatabase(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName)
-	if err != nil {
-		logger.Fatal().Msgf("Failed to connect to database: %v", err)
+	switch db.Driver {
+	case "mysql":
+		connectionStr = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local", db.User, db.Password, db.Host, db.Port, db.Name)
+	case "postgres":
+		connectionStr = fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", db.Host, db.Port, db.User, db.Name, db.Password)
+	default:
+		return nil, fmt.Errorf("Unsupported driver: %s", db.Driver)
 	}
+
+	conn, err := gorm.Open(db.Driver, connectionStr)
+	if err != nil {
+		logger.Info().Msgf("Cannot connect to %s database", db.Driver)
+		logger.Fatal().Msgf("This is the error:", err)
+	}
+	logger.Info().Msgf("We are connected to the %s database", db.Driver)
+
+	return conn, err
+}
+
+func (server *Server) Initialize(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
+
+	var err error
+	db := &Database{
+		Driver:   Dbdriver,
+		User:     DbUser,
+		Password: DbPassword,
+		Port:     DbPort,
+		Host:     DbHost,
+		Name:     DbName,
+	}
+
+	server.DB, err = db.Initialize()
+	if err != nil {
+		// handle error
+	}
+
+	server.DB.Debug().AutoMigrate(&models.User{}, &models.Post{}) //database migration
 
 	server.Router = mux.NewRouter()
 

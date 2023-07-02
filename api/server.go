@@ -19,10 +19,10 @@ func Run() {
 	logger := logs.GetLogger()
 	if err != nil {
 		logger.Fatal().Msgf("Error getting env, not comming through %v", err)
-		//log.Fatalf("Error getting env, not comming through %v", err)
+
 	} else {
 		logger.Info().Msg("We are getting the env values")
-		//fmt.Println("We are getting the env values")
+
 	}
 	logger.Info().Msgf("DB_DRIVER: %s", os.Getenv("DB_DRIVER"))
 	server.Initialize(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
