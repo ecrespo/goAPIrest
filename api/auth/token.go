@@ -3,14 +3,13 @@ package auth
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/ecrespo/goAPIrest/api/utils/logs"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	jwt "github.com/dgrijalva/jwt-go"
 )
 
 func CreateToken(user_id uint32) (string, error) {
@@ -20,18 +19,20 @@ func CreateToken(user_id uint32) (string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * 1).Unix() //Token expires after 1 hour
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(os.Getenv("API_SECRET")))
-
 }
 
-func TokenValid(r *http.Request) error {
-
-	tokenString := ExtractToken(r)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+func parseTokenFromString(tokenString string) (*jwt.Token, error) {
+	return jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(os.Getenv("API_SECRET")), nil
 	})
+}
+
+func TokenValid(r *http.Request) error {
+	tokenString := ExtractToken(r)
+	token, err := parseTokenFromString(tokenString)
 	if err != nil {
 		return err
 	}
@@ -55,14 +56,8 @@ func ExtractToken(r *http.Request) string {
 }
 
 func ExtractTokenID(r *http.Request) (uint32, error) {
-
 	tokenString := ExtractToken(r)
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-		}
-		return []byte(os.Getenv("API_SECRET")), nil
-	})
+	token, err := parseTokenFromString(tokenString)
 	if err != nil {
 		return 0, err
 	}
@@ -77,15 +72,13 @@ func ExtractTokenID(r *http.Request) (uint32, error) {
 	return 0, nil
 }
 
-// Pretty display the claims licely in the terminal
+// Pretty display the claims nicely in the terminal
 func Pretty(data interface{}) {
 	b, err := json.MarshalIndent(data, "", " ")
 	logger := logs.GetLogger()
 	if err != nil {
 		logger.Error().Msgf("Error: %s", err)
-		//log.Println(err)
 		return
 	}
-
 	fmt.Println(string(b))
 }
