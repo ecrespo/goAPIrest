@@ -51,9 +51,26 @@ func (server *Server) Login(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, token)
 }
 
+//func (server *Server) SignIn(email, password string) (string, error) {
+//	user := models.User{}
+//	err := server.DB.Debug().Model(models.User{}).Where("email = ?", email).Take(&user).Error
+//
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	err = models.VerifyPassword(user.Password, password)
+//
+//	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+//		return "", err
+//	}
+//
+//	return auth.CreateToken(user.ID)
+//}
+
 func (server *Server) SignIn(email, password string) (string, error) {
-	user := models.User{}
-	err := server.DB.Debug().Model(models.User{}).Where("email = ?", email).Take(&user).Error
+
+	user, err := server.UserRepository.FindByEmail(email)
 
 	if err != nil {
 		return "", err

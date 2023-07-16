@@ -1,18 +1,6 @@
 version: '3'
 services:
 
-#  traefik: #prueba
-#    image: traefik:v2.10.1
-#    command: --api.insecure=true --providers.docker
-#    depends_on:
-#      - app
-#    networks:
-#      - goapirest
-#    ports:
-#      - "80:80"
-#      - "8090:8090"
-#    volumes:
-#      - /var/run/docker.sock:/var/run/docker.sock
 
   app:
     container_name: goapirest_app
@@ -25,9 +13,7 @@ services:
     depends_on:
       - goapirest-mysql
       - phpmyadmin
-#    labels:
-#      - "traefik.http.routers.web.rule=Host(`goapirest.local.ve`) || PathPrefix(`/`)"
-#      - "traefik.http.services.web.loadbalancer.server.port=8090"
+
     networks:
       - goapirest
 

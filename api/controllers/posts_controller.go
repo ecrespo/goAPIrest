@@ -34,18 +34,25 @@ func (server *Server) parseAndCheckPostIDAndUserID(r *http.Request) (uid uint32,
 		return 0, 0, err
 	}
 	uid, err = auth.ExtractTokenID(r)
+	if err != nil {
+		return 0, 0, err
+	}
 	return uid, pid, err
 }
 
-func (server *Server) findPostByID(pid uint64) (models.Post, error) {
-	post := models.Post{}
-	err := server.DB.Debug().Model(models.Post{}).Where("id = ?", pid).Take(&post).Error
-	return post, err
+func (server *Server) findPostByID(uid uint32, pid uint64) (models.Post, error) {
+	post, err := server.PostRepository.FindByID(pid)
+	if err != nil {
+		return nil, err
+	}
+	if uid != post.AuthorID {
+		return nil, errors.New("Unauthorized")
+	}
+	return post, nil
 }
 
 func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 	post := models.Post{}
-
 	err := server.validateAndUnmarshalPost(r, &post)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
@@ -53,17 +60,12 @@ func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	uid, err := auth.ExtractTokenID(r)
-	if err != nil {
+	if err != nil || uid != post.AuthorID {
 		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
 		return
 	}
 
-	if uid != post.AuthorID {
-		responses.ERROR(w, http.StatusUnauthorized, errors.New("Unauthorized"))
-		return
-	}
-
-	postCreated, err := post.SavePost(server.DB)
+	postCreated, err := server.PostRepository.Save(&post)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
@@ -75,9 +77,8 @@ func (server *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 }
 
 func (server *Server) GetPosts(w http.ResponseWriter, r *http.Request) {
-	post := models.Post{}
 
-	posts, err := post.FindAllPosts(server.DB)
+	posts, err := server.PostRepository.FindAll()
 	if err != nil {
 		responses.ERROR(w, http.StatusInternalServerError, err)
 		return
@@ -121,8 +122,7 @@ func (server *Server) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postUpdate := models.Post{}
-	err = server.validateAndUnmarshalPost(r, &postUpdate)
+	postUpdate, err := server.validateAndUnmarshalPost(r)
 	if err != nil {
 		responses.ERROR(w, http.StatusUnprocessableEntity, err)
 		return
@@ -133,8 +133,8 @@ func (server *Server) UpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	postUpdate.ID = post.ID
-	postUpdated, err := postUpdate.UpdateAPost(server.DB)
+	postUpdate.ID = pid
+	postUpdated, err := server.PostRepository.Update(*postUpdate)
 	if err != nil {
 		formattedError := formaterror.FormatError(err.Error())
 		responses.ERROR(w, http.StatusInternalServerError, formattedError)
@@ -162,7 +162,7 @@ func (server *Server) DeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = post.DeleteAPost(server.DB, pid, uid)
+	_, err = server.PostRepository.Delete(pid)
 	if err != nil {
 		responses.ERROR(w, http.StatusBadRequest, err)
 		return
